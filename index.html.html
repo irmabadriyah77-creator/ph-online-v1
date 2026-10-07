@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Penilaian Harian (PH) Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header Utama -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-brand-600 text-white p-2 rounded-xl shadow-md">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-800 text-lg leading-tight">PH Online System</h1>
+                    <p class="text-xs text-slate-500">Google Sheets Database Engine</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Status Mode API -->
+                <div id="apiStatusBadge" class="flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span class="font-medium hidden sm:inline" id="apiStatusText">Mode Demo (Simulasi)</span>
+                </div>
+
+                <button onclick="toggleModal('configModal')" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition" title="Pengaturan URL API">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
+                <button onclick="toggleModal('guideModal')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs sm:text-sm rounded-lg transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-code text-brand-600"></i>
+                    <span>Panduan & Script</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- VIEW 1: HALAMAN LOGIN -->
+        <section id="loginView" class="max-w-md mx-auto my-8">
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-slate-100">
+                <div class="text-center mb-6">
+                    <div class="inline-flex p-3 bg-brand-50 text-brand-600 rounded-2xl mb-3">
+                        <i class="fa-solid fa-user-lock text-3xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800">Login Ujian</h2>
+                    <p class="text-slate-500 text-sm mt-1">Masukkan Nama dan Password sesuai Sheet Siswa</p>
+                </div>
+
+                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Nama Lengkap</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-user absolute left-3 top-3.5 text-slate-400"></i>
+                            <input type="text" id="loginNama" required placeholder="Contoh: Budi Santoso" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-slate-800">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Password</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-key absolute left-3 top-3.5 text-slate-400"></i>
+                            <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-slate-800">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Kelas</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-school absolute left-3 top-3.5 text-slate-400"></i>
+                            <select id="loginKelas" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-slate-800 bg-white">
+                                <option value="X IPA 1">X IPA 1</option>
+                                <option value="X IPA 2">X IPA 2</option>
+                                <option value="XI IPS 1">XI IPS 1</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnLoginSubmit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-md shadow-brand-500/20 transition flex items-center justify-center gap-2">
+                        <span>Masuk Ruang Ujian</span>
+                        <i class="fa-solid fa-arrow-right text-sm"></i>
+                    </button>
+                </form>
+
+                <!-- Shortcut Login Demo -->
+                <div class="mt-6 pt-6 border-t border-slate-100 text-center">
+                    <p class="text-xs text-slate-400 mb-3">Atau uji coba cepat dengan akun demo:</p>
+                    <div class="flex justify-center gap-2">
+                        <button onclick="fillDemoAccount('Budi Santoso', '123456', 'X IPA 1')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition font-medium">
+                            Demo: Budi (Pass: 123456)
+                        </button>
+                        <button onclick="fillDemoAccount('Siti Rahma', '654321', 'X IPA 1')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition font-medium">
+                            Demo: Siti (Pass: 654321)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: HALAMAN UJIAN (SOAL & TIMER) -->
+        <section id="examView" class="hidden">
+            <!-- Header Informasi Ujian -->
+            <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center text-xl font-bold">
+                        <span id="userAvatar">B</span>
+                    </div>
+                    <div>
+                        <h3 id="studentNameDisplay" class="font-bold text-slate-800 text-lg">Budi Santoso</h3>
+                        <p class="text-xs text-slate-500 flex items-center gap-2">
+                            <span><i class="fa-solid fa-school text-slate-400 mr-1"></i><span id="studentClassDisplay">X IPA 1</span></span>
+                            <span>•</span>
+                            <span>Penilaian Harian Matematika</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Timer & Controls -->
+                <div class="flex items-center justify-between md:justify-end gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-clock text-amber-500 text-lg"></i>
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase font-semibold">Sisa Waktu</p>
+                            <p id="timerDisplay" class="font-mono font-bold text-slate-800 text-xl leading-tight">30:00</p>
+                        </div>
+                    </div>
+                    <button onclick="confirmSubmitExam()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Selesai & Submit</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body Ujian: Navigasi & Soal -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Palette Nomor Soal -->
+                <div class="lg:col-span-1 order-2 lg:order-1">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 sticky top-24">
+                        <h4 class="font-semibold text-slate-800 mb-3 text-sm flex items-center justify-between">
+                            <span>Navigasi Soal</span>
+                            <span id="answeredCount" class="text-xs bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full font-bold">0 / 0 Terjawab</span>
+                        </h4>
+                        <div id="questionPalette" class="grid grid-cols-5 gap-2">
+                            <!-- Palette items render here dynamically -->
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500 space-y-1.5">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span>
+                                <span>Sudah Dijawab</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded bg-slate-200 inline-block"></span>
+                                <span>Belum Dijawab</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded border-2 border-brand-500 inline-block"></span>
+                                <span>Soal Aktif</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Soal Container -->
+                <div class="lg:col-span-3 order-1 lg:order-2">
+                    <div id="questionContainer" class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+                        <!-- Loading Indicator -->
+                        <div class="py-12 text-center text-slate-400">
+                            <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-brand-500"></i>
+                            <p>Memuat lembar soal...</p>
+                        </div>
+                    </div>
+
+                    <!-- Next / Prev Control -->
+                    <div class="flex items-center justify-between mt-4">
+                        <button id="btnPrev" onclick="navigateQuestion(-1)" class="px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-xl transition text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                            <span>Sebelumnya</span>
+                        </button>
+                        <button id="btnNext" onclick="navigateQuestion(1)" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-xl transition text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span>Selanjutnya</span>
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: HALAMAN HASIL & EVALUASI -->
+        <section id="resultView" class="hidden max-w-4xl mx-auto">
+            <!-- Banner Skor Top -->
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 text-center mb-6 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-500 via-emerald-500 to-amber-500"></div>
+                <div class="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-full mb-3">
+                    <i class="fa-solid fa-circle-check text-4xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Ujian Berhasil Disubmit!</h2>
+                <p class="text-slate-500 text-sm mt-1">Jawaban Anda telah tersimpan secara otomatis di Google Sheets.</p>
+
+                <div class="my-6 inline-flex flex-col items-center bg-slate-50 border border-slate-200 px-8 py-5 rounded-2xl">
+                    <span class="text-xs uppercase font-semibold text-slate-400 tracking-wider">Skor Pilihan Ganda & Isian</span>
+                    <span id="finalScoreDisplay" class="text-5xl font-extrabold text-brand-600 my-1">85</span>
+                    <span class="text-xs text-slate-500" id="scoreMaxLabel">dari total nilai otomatis 100</span>
+                </div>
+
+                <div id="uraianNotice" class="max-w-md mx-auto p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs flex items-center gap-2 text-left">
+                    <i class="fa-solid fa-circle-info text-amber-600 text-base flex-shrink-0"></i>
+                    <span><strong>Catatan Uraian/Essay:</strong> Soal tipe Uraian memerlukan pemeriksaan manual oleh Guru. Status Koreksi: <span class="font-bold underline">Menunggu Pemeriksaan</span>.</span>
+                </div>
+
+                <div class="mt-6 flex justify-center gap-3">
+                    <button onclick="resetApp()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm rounded-xl transition flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Kembali ke Login</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Review Pembahasan Soal -->
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-brand-600"></i>
+                    <span>Evaluasi & Pembahasan Soal</span>
+                </h3>
+
+                <div id="evaluationList" class="space-y-6">
+                    <!-- Dynamic evaluation items -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL PENGATURAN API GOOGLE APPS SCRIPT -->
+    <div id="configModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-brand-600"></i>
+                    <span>Pengaturan Database Backend</span>
+                </h3>
+                <button onclick="toggleModal('configModal')" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Aplikasi ini berjalan dalam **Mode Demo (Simulasi)** secara bawaan. Untuk menyambungkan ke Google Sheets milik Anda sendiri, masukkan URL Web App Google Apps Script hasil deploy Anda di bawah ini:
+            </p>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Web App URL (Google Apps Script)</label>
+                <input type="url" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div class="flex items-center gap-2 pt-2">
+                <button onclick="saveGasUrl()" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-medium text-sm transition">
+                    Simpan & Hubungkan URL
+                </button>
+                <button onclick="useDemoMode()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium text-sm transition">
+                    Gunakan Mode Demo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PANDUAN DEPLOY & KODE APPS SCRIPT -->
+    <div id="guideModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between p-5 border-b border-slate-100">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2 text-lg">
+                    <i class="fa-solid fa-file-code text-brand-600"></i>
+                    <span>Panduan Setup Google Sheets & Apps Script</span>
+                </h3>
+                <button onclick="toggleModal('guideModal')" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6 custom-scrollbar text-sm text-slate-600">
+                <!-- Langkah 1: Spreadsheet -->
+                <div>
+                    <h4 class="font-bold text-slate-800 text-base mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs">1</span>
+                        <span>Struktur Sheet Google Sheets</span>
+                    </h4>
+                    <p class="text-xs mb-3">Buat Spreadsheet baru di Google Drive, buat **3 Sheet** dengan nama persis berikut:</p>
+                    <div class="space-y-3">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 font-mono text-xs">
+                            <p class="font-bold text-brand-700 mb-1">Sheet 1: Siswa</p>
+                            <p class="text-slate-600">Kolom Baris 1: <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Nama</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Password</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Kelas</span></p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 font-mono text-xs">
+                            <p class="font-bold text-brand-700 mb-1">Sheet 2: Soal</p>
+                            <p class="text-slate-600">Kolom Baris 1: <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">ID Soal</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Tipe Soal</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Pertanyaan</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Opsi A</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Opsi B</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Opsi C</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Opsi D</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Kunci Jawaban</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Pembahasan</span></p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 font-mono text-xs">
+                            <p class="font-bold text-brand-700 mb-1">Sheet 3: Hasil</p>
+                            <p class="text-slate-600">Kolom Baris 1: <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Nama Siswa</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Tanggal/Waktu Submit</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Skor Pilihan Ganda/Isian</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Detail Jawaban Siswa</span> | <span class="bg-amber-100 px-1.5 py-0.5 rounded text-amber-800">Status Koreksi Uraian</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Langkah 2: Kode Apps Script -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs">2</span>
+                            <span>Kode Google Apps Script (Code.gs)</span>
+                        </h4>
+                        <button onclick="copyAppsScriptCode()" class="px-3 py-1 bg-brand-50 text-brand-600 hover:bg-brand-100 font-semibold rounded-lg text-xs transition flex items-center gap-1">
+                            <i class="fa-regular fa-copy"></i>
+                            <span id="copyBtnText">Salin Kode</span>
+                        </button>
+                    </div>
+                    <p class="text-xs mb-2">Buka menu **Ekstensi > Apps Script** pada Google Sheets Anda, hapus semua kode bawaan lalu tempel kode berikut:</p>
+                    <pre class="bg-slate-900 text-slate-200 p-4 rounded-xl text-xs overflow-x-auto font-mono max-h-60 custom-scrollbar" id="appsScriptCodeBlock">
+function doGet(e) {
+  var action = e.parameter.action;
+  if (action === 'getQuestions') {
+    return getQuestions();
+  }
+  return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "API Penilaian Harian Aktif" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    var contents = JSON.parse(e.postData.contents);
+    var action = contents.action;
+
+    if (action === 'login') {
+      return handleLogin(contents.nama, contents.password);
+    } else if (action === 'getQuestions') {
+      return getQuestions();
+    } else if (action === 'submitAnswers') {
+      return submitAnswers(contents);
+    }
+
+    return responseJSON({ status: "error", message: "Action tidak dikenali" });
+  } catch (err) {
+    return responseJSON({ status: "error", message: err.toString() });
+  }
+}
+
+function handleLogin(nama, password) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Siswa");
+  if (!sheet) return responseJSON({ status: "error", message: "Sheet 'Siswa' tidak ditemukan" });
+
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    var userNama = String(data[i][0]).trim();
+    var userPass = String(data[i][1]).trim();
+    var userKelas = String(data[i][2]).trim();
+
+    if (userNama.toLowerCase() === String(nama).trim().toLowerCase() && userPass === String(password).trim()) {
+      return responseJSON({
+        status: "success",
+        user: { nama: userNama, kelas: userKelas }
+      });
+    }
+  }
+  return responseJSON({ status: "error", message: "Nama atau Password tidak sesuai!" });
+}
+
+function getQuestions() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Soal");
+  if (!sheet) return responseJSON({ status: "error", message: "Sheet 'Soal' tidak ditemukan" });
+
+  var data = sheet.getDataRange().getValues();
+  var questions = [];
+
+  for (var i = 1; i < data.length; i++) {
+    if (!data[i][0]) continue; // Skip jika ID kosong
+    questions.push({
+      id: data[i][0],
+      tipe: data[i][1], // 'Pilihan Ganda', 'Isian', 'Uraian'
+      pertanyaan: data[i][2],
+      opsi: [data[i][3], data[i][4], data[i][5], data[i][6]].filter(Boolean),
+      kunci: data[i][7],
+      pembahasan: data[i][8] || "Tidak ada pembahasan khusus."
+    });
+  }
+
+  return responseJSON({ status: "success", questions: questions });
+}
+
+function submitAnswers(payload) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheetHasil = ss.getSheetByName("Hasil");
+  if (!sheetHasil) {
+    sheetHasil = ss.insertSheet("Hasil");
+    sheetHasil.appendRow(["Nama Siswa", "Tanggal/Waktu Submit", "Skor Pilihan Ganda/Isian", "Detail Jawaban Siswa", "Status Koreksi Uraian"]);
+  }
+
+  var studentName = payload.nama;
+  var answers = payload.jawaban; // Object: { soalId: userAns }
+  var questions = payload.questions; // Questions array
+
+  var totalAutograded = 0;
+  var maxAutograded = 0;
+  var hasUraian = false;
+
+  questions.forEach(function(q) {
+    var userAns = String(answers[q.id] || '').trim().toLowerCase();
+    var keyAns = String(q.kunci || '').trim().toLowerCase();
+
+    if (q.tipe === 'Pilihan Ganda' || q.tipe === 'Isian') {
+      maxAutograded += 10;
+      if (userAns === keyAns) {
+        totalAutograded += 10;
+      }
+    } else if (q.tipe === 'Uraian') {
+      hasUraian = true;
+    }
+  });
+
+  // Skala nilai ke 100 untuk PG/Isian
+  var finalScore = maxAutograded > 0 ? Math.round((totalAutograded / maxAutograded) * 100) : 0;
+  var uraianStatus = hasUraian ? "Menunggu Koreksi Guru" : "Tidak Ada Uraian";
+
+  var timestamp = new Date().toLocaleString("id-ID");
+  var detailAnswersStr = JSON.stringify(answers);
+
+  sheetHasil.appendRow([studentName, timestamp, finalScore, detailAnswersStr, uraianStatus]);
+
+  return responseJSON({
+    status: "success",
+    score: finalScore,
+    uraianStatus: uraianStatus
+  });
+}
+
+function responseJSON(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+</pre>
+                </div>
+
+                <!-- Langkah 3: Deploy -->
+                <div>
+                    <h4 class="font-bold text-slate-800 text-base mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs">3</span>
+                        <span>Cara Deploy Menjadi Web App</span>
+                    </h4>
+                    <ol class="list-decimal list-inside text-xs space-y-1.5 pl-2">
+                        <li>Klik tombol <strong>Deploy (Terapkan) > New deployment (Penerapan baru)</strong>.</li>
+                        <li>Pilih jenis penerapan: <strong>Web App (Aplikasi Web)</strong>.</li>
+                        <li>Isi Deskripsi (misal: "API PH v1").</li>
+                        <li>Atur <strong>Execute as (Jalankan sebagai)</strong>: <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">Me (Saya)</code>.</li>
+                        <li>Atur <strong>Who has access (Siapa yang memiliki akses)</strong>: <code class="bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-mono">Anyone (Siapa saja)</code>.</li>
+                        <li>Klik <strong>Deploy</strong>, lalu berikan Izin Akses (Authorize Access).</li>
+                        <li>Salin <strong>Web App URL</strong> yang dihasilkan, lalu masukkan pada modal <strong>Pengaturan Backend</strong> di web ini.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL KONFIRMASI SUBMIT -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center space-y-4">
+            <div class="inline-flex p-3 bg-amber-50 text-amber-600 rounded-full">
+                <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+            </div>
+            <h3 class="font-bold text-slate-800 text-lg">Kirim Jawaban Ujian?</h3>
+            <p class="text-xs text-slate-500">
+                Pastikan seluruh pertanyaan telah dijawab. Setelah dikirim, jawaban tidak dapat diubah kembali.
+            </p>
+            <div class="flex items-center gap-2 pt-2">
+                <button onclick="submitExam()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm transition">
+                    Ya, Kirim Sekarang
+                </button>
+                <button onclick="toggleModal('confirmModal')" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium text-sm transition">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Global Aplikasi
+        let gasUrl = localStorage.getItem('ph_gas_url') || '';
+        let currentUser = null;
+        let questionsData = [];
+        let currentQuestionIndex = 0;
+        let studentAnswers = {};
+        let examTimer = null;
+        let timeRemaining = 1800; // 30 Menit dalam detik
+
+        // Sample Mock Data (Untuk Pengujian Instan Tanpa GAS Backend)
+        const mockSiswa = [
+            { nama: 'Budi Santoso', password: '123456', kelas: 'X IPA 1' },
+            { nama: 'Siti Rahma', password: '654321', kelas: 'X IPA 1' }
+        ];
+
+        const mockSoal = [
+            {
+                id: 'SOAL-01',
+                tipe: 'Pilihan Ganda',
+                pertanyaan: 'Hasil dari perhitungan 12 + 4 × 5 - 8 adalah...',
+                opsi: ['24', '28', '72', '16'],
+                kunci: '24',
+                pembahasan: 'Gunakan urutan operasi matematika (perkalian dahulu baru penjumlahan/pengurangan): 12 + (4 × 5) - 8 = 12 + 20 - 8 = 24.'
+            },
+            {
+                id: 'SOAL-02',
+                tipe: 'Pilihan Ganda',
+                pertanyaan: 'Akar kuadrat dari 144 adalah...',
+                opsi: ['10', '12', '14', '16'],
+                kunci: '12',
+                pembahasan: 'Karena 12 × 12 = 144, maka √144 = 12.'
+            },
+            {
+                id: 'SOAL-03',
+                tipe: 'Isian',
+                pertanyaan: 'Planet terdekat dengan Matahari dalam sistem Tata Surya kita adalah...',
+                opsi: [],
+                kunci: 'Merkurius',
+                pembahasan: 'Merkurius adalah planet yang paling dekat posisinya dengan Matahari.'
+            },
+            {
+                id: 'SOAL-04',
+                tipe: 'Uraian',
+                pertanyaan: 'Jelaskan hubungan antara gaya, massa, dan percepatan sesuai dengan Hukum II Newton!',
+                opsi: [],
+                kunci: 'F = m x a',
+                pembahasan: 'Hukum II Newton menyatakan bahwa percepatan sebuah benda berbanding lurus dengan gaya total yang bekerja padanya dan berbanding terbalik dengan massanya (F = m · a).'
+            }
+        ];
+
+        window.onload = function() {
+            updateApiStatusBadge();
+            if (gasUrl) {
+                document.getElementById('gasUrlInput').value = gasUrl;
+            }
+        };
+
+        function updateApiStatusBadge() {
+            const badge = document.getElementById('apiStatusBadge');
+            const text = document.getElementById('apiStatusText');
+            if (gasUrl) {
+                badge.className = 'flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+                text.innerText = 'Connected: Google Sheets API';
+            } else {
+                badge.className = 'flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200';
+                text.innerText = 'Mode Demo (Simulasi)';
+            }
+        }
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.toggle('hidden');
+            }
+        }
+
+        function saveGasUrl() {
+            const input = document.getElementById('gasUrlInput').value.trim();
+            if (input) {
+                gasUrl = input;
+                localStorage.setItem('ph_gas_url', gasUrl);
+            } else {
+                gasUrl = '';
+                localStorage.removeItem('ph_gas_url');
+            }
+            updateApiStatusBadge();
+            toggleModal('configModal');
+            showToast('Pengaturan API disimpan!');
+        }
+
+        function useDemoMode() {
+            gasUrl = '';
+            localStorage.removeItem('ph_gas_url');
+            document.getElementById('gasUrlInput').value = '';
+            updateApiStatusBadge();
+            toggleModal('configModal');
+            showToast('Menggunakan Mode Demo');
+        }
+
+        function fillDemoAccount(nama, pass, kelas) {
+            document.getElementById('loginNama').value = nama;
+            document.getElementById('loginPassword').value = pass;
+            document.getElementById('loginKelas').value = kelas;
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const nama = document.getElementById('loginNama').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const kelas = document.getElementById('loginKelas').value;
+
+            const btn = document.getElementById('btnLoginSubmit');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-sm"></i> <span>Memeriksa...</span>`;
+
+            try {
+                if (gasUrl) {
+                    // API Call ke Google Apps Script
+                    const response = await fetch(gasUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'login', nama: nama, password: password })
+                    });
+                    const resData = await response.json();
+                    
+                    if (resData.status === 'success') {
+                        currentUser = resData.user || { nama: nama, kelas: kelas };
+                        startExamSession();
+                    } else {
+                        showToast(resData.message || 'Login gagal!', true);
+                    }
+                } else {
+                    // Simulation Login Mode
+                    const found = mockSiswa.find(s => s.nama.toLowerCase() === nama.toLowerCase() && s.password === password);
+                    if (found) {
+                        currentUser = { nama: found.nama, kelas: found.kelas };
+                        startExamSession();
+                    } else {
+                        showToast('Nama / Password Demo salah! Gunakan tombol Demo.', true);
+                    }
+                }
+            } catch (err) {
+                showToast('Gagal terhubung ke API: ' + err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span>Masuk Ruang Ujian</span> <i class="fa-solid fa-arrow-right text-sm"></i>`;
+            }
+        }
+
+        async function startExamSession() {
+            // Update User Profile Header
+            document.getElementById('studentNameDisplay').innerText = currentUser.nama;
+            document.getElementById('studentClassDisplay').innerText = currentUser.kelas;
+            document.getElementById('userAvatar').innerText = currentUser.nama.charAt(0).toUpperCase();
+
+            // Switch Screen
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('examView').classList.remove('hidden');
+
+            // Fetch Questions
+            await loadQuestions();
+            startTimer();
+        }
+
+        async function loadQuestions() {
+            const container = document.getElementById('questionContainer');
+            container.innerHTML = `
+                <div class="py-12 text-center text-slate-400">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-brand-500"></i>
+                    <p>Mengambil soal dari Database Sheet...</p>
+                </div>
+            `;
+
+            try {
+                if (gasUrl) {
+                    const response = await fetch(`${gasUrl}?action=getQuestions`);
+                    const resData = await response.json();
+                    if (resData.status === 'success') {
+                        questionsData = resData.questions;
+                    } else {
+                        throw new Error(resData.message);
+                    }
+                } else {
+                    // Demo Questions
+                    questionsData = mockSoal;
+                }
+
+                currentQuestionIndex = 0;
+                studentAnswers = {};
+                renderQuestionPalette();
+                renderCurrentQuestion();
+
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-rose-600 bg-rose-50 rounded-xl">
+                        <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+                        <p class="font-semibold">Gagal memuat soal!</p>
+                        <p class="text-xs text-rose-500 mt-1">${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderQuestionPalette() {
+            const palette = document.getElementById('questionPalette');
+            palette.innerHTML = '';
+
+            questionsData.forEach((q, idx) => {
+                const isAnswered = studentAnswers[q.id] !== undefined && studentAnswers[q.id] !== '';
+                const isActive = idx === currentQuestionIndex;
+
+                let btnClass = 'h-10 rounded-lg text-xs font-bold transition flex items-center justify-center border ';
+                if (isActive) {
+                    btnClass += 'border-brand-600 ring-2 ring-brand-500/30 text-brand-700 bg-brand-50';
+                } else if (isAnswered) {
+                    btnClass += 'bg-emerald-500 border-emerald-600 text-white';
+                } else {
+                    btnClass += 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200';
+                }
+
+                const btn = document.createElement('button');
+                btn.className = btnClass;
+                btn.innerText = idx + 1;
+                btn.onclick = () => jumpToQuestion(idx);
+                palette.appendChild(btn);
+            });
+
+            // Update Count
+            const answeredTotal = Object.keys(studentAnswers).filter(k => studentAnswers[k] !== '').length;
+            document.getElementById('answeredCount').innerText = `${answeredTotal} / ${questionsData.length} Terjawab`;
+        }
+
+        function renderCurrentQuestion() {
+            if (questionsData.length === 0) return;
+
+            const q = questionsData[currentQuestionIndex];
+            const container = document.getElementById('questionContainer');
+            const savedAns = studentAnswers[q.id] || '';
+
+            let badgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
+            if (q.tipe === 'Isian') badgeColor = 'bg-purple-50 text-purple-700 border-purple-200';
+            if (q.tipe === 'Uraian') badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
+
+            let optionsHtml = '';
+
+            if (q.tipe === 'Pilihan Ganda') {
+                optionsHtml = `<div class="space-y-3 mt-4">`;
+                const labels = ['A', 'B', 'C', 'D'];
+                q.opsi.forEach((opt, oIdx) => {
+                    const isSelected = savedAns === opt;
+                    optionsHtml += `
+                        <label onclick="saveAnswer('${q.id}', '${opt}')" class="flex items-center p-3.5 rounded-xl border ${isSelected ? 'border-brand-500 bg-brand-50/50 ring-1 ring-brand-500' : 'border-slate-200 hover:bg-slate-50'} cursor-pointer transition">
+                            <input type="radio" name="option_${q.id}" value="${opt}" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+                            <span class="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center ml-3 mr-3">${labels[oIdx] || oIdx + 1}</span>
+                            <span class="text-sm text-slate-700 font-medium">${opt}</span>
+                        </label>
+                    `;
+                });
+                optionsHtml += `</div>`;
+            } else if (q.tipe === 'Isian') {
+                optionsHtml = `
+                    <div class="mt-4">
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Jawaban Isian Singkat</label>
+                        <input type="text" value="${savedAns}" oninput="saveAnswer('${q.id}', this.value)" placeholder="Tuliskan jawaban singkat Anda di sini..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-slate-800 text-sm">
+                    </div>
+                `;
+            } else if (q.tipe === 'Uraian') {
+                optionsHtml = `
+                    <div class="mt-4">
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Jawaban Uraian / Essay</label>
+                        <textarea rows="4" oninput="saveAnswer('${q.id}', this.value)" placeholder="Tuliskan penjelasan atau langkah penyelesaian lengkap Anda di sini..." class="w-full p-4 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-slate-800 text-sm custom-scrollbar">${savedAns}</textarea>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Soal Nomor ${currentQuestionIndex + 1}</span>
+                        <span class="text-xs font-semibold px-2.5 py-1 rounded-full border ${badgeColor}">${q.tipe}</span>
+                    </div>
+                    <p class="text-base sm:text-lg font-medium text-slate-800 leading-relaxed">${q.pertanyaan}</p>
+                </div>
+                ${optionsHtml}
+            `;
+
+            // Navigation Buttons State
+            document.getElementById('btnPrev').disabled = currentQuestionIndex === 0;
+            document.getElementById('btnNext').disabled = currentQuestionIndex === questionsData.length - 1;
+
+            renderQuestionPalette();
+        }
+
+        function saveAnswer(questionId, value) {
+            studentAnswers[questionId] = value;
+            renderQuestionPalette();
+        }
+
+        function navigateQuestion(direction) {
+            const newIdx = currentQuestionIndex + direction;
+            if (newIdx >= 0 && newIdx < questionsData.length) {
+                currentQuestionIndex = newIdx;
+                renderCurrentQuestion();
+            }
+        }
+
+        function jumpToQuestion(index) {
+            currentQuestionIndex = index;
+            renderCurrentQuestion();
+        }
+
+        function startTimer() {
+            clearInterval(examTimer);
+            timeRemaining = 1800; // 30 Menit
+
+            examTimer = setInterval(() => {
+                timeRemaining--;
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                
+                document.getElementById('timerDisplay').innerText = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(examTimer);
+                    showToast('Waktu Ujian telah habis! Mengirim jawaban otomatis.', true);
+                    submitExam();
+                }
+            }, 1000);
+        }
+
+        function confirmSubmitExam() {
+            toggleModal('confirmModal');
+        }
+
+        async function submitExam() {
+            clearInterval(examTimer);
+            if (!document.getElementById('confirmModal').classList.contains('hidden')) {
+                toggleModal('confirmModal');
+            }
+
+            let calculatedScore = 0;
+            let maxAutograded = 0;
+            let hasUraian = false;
+
+            // Hitung Skor Lokal
+            questionsData.forEach(q => {
+                const userAns = String(studentAnswers[q.id] || '').trim().toLowerCase();
+                const keyAns = String(q.kunci || '').trim().toLowerCase();
+
+                if (q.tipe === 'Pilihan Ganda' || q.tipe === 'Isian') {
+                    maxAutograded += 10;
+                    if (userAns === keyAns) {
+                        calculatedScore += 10;
+                    }
+                } else if (q.tipe === 'Uraian') {
+                    hasUraian = true;
+                }
+            });
+
+            const finalScore = maxAutograded > 0 ? Math.round((calculatedScore / maxAutograded) * 100) : 0;
+
+            // Submit ke Backend jika URL terpasang
+            if (gasUrl) {
+                try {
+                    showToast('Mengirim hasil ujian ke Google Sheets...');
+                    await fetch(gasUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: 'submitAnswers',
+                            nama: currentUser.nama,
+                            jawaban: studentAnswers,
+                            questions: questionsData
+                        })
+                    });
+                } catch (err) {
+                    console.error('Submit error:', err);
+                }
+            }
+
+            // Display Results
+            document.getElementById('examView').classList.add('hidden');
+            document.getElementById('resultView').classList.remove('hidden');
+
+            document.getElementById('finalScoreDisplay').innerText = finalScore;
+            
+            if (!hasUraian) {
+                document.getElementById('uraianNotice').classList.add('hidden');
+            } else {
+                document.getElementById('uraianNotice').classList.remove('hidden');
+            }
+
+            renderEvaluationReview();
+        }
+
+        function renderEvaluationReview() {
+            const list = document.getElementById('evaluationList');
+            list.innerHTML = '';
+
+            questionsData.forEach((q, idx) => {
+                const userAns = studentAnswers[q.id] || '<em>Tidak dijawab</em>';
+                const keyAns = q.kunci;
+                const isPGorIsian = q.tipe === 'Pilihan Ganda' || q.tipe === 'Isian';
+
+                const isCorrect = isPGorIsian && String(userAns).trim().toLowerCase() === String(keyAns).trim().toLowerCase();
+
+                let statusBadge = '';
+                if (isPGorIsian) {
+                    statusBadge = isCorrect 
+                        ? `<span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-bold text-xs rounded-full border border-emerald-200"><i class="fa-solid fa-check mr-1"></i>Benar</span>`
+                        : `<span class="px-2.5 py-1 bg-rose-50 text-rose-700 font-bold text-xs rounded-full border border-rose-200"><i class="fa-solid fa-xmark mr-1"></i>Salah</span>`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 bg-amber-50 text-amber-700 font-bold text-xs rounded-full border border-amber-200"><i class="fa-solid fa-hourglass-half mr-1"></i>Perlu Koreksi Guru</span>`;
+                }
+
+                const item = document.createElement('div');
+                item.className = 'p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3';
+                item.innerHTML = `
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-bold text-slate-500 uppercase">Soal #${idx + 1} (${q.tipe})</span>
+                        ${statusBadge}
+                    </div>
+                    <p class="font-semibold text-slate-800 text-sm">${q.pertanyaan}</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2">
+                        <div class="p-3 bg-white border border-slate-200 rounded-xl">
+                            <span class="text-slate-400 block font-semibold mb-1">Jawaban Siswa:</span>
+                            <span class="font-bold ${isPGorIsian ? (isCorrect ? 'text-emerald-600' : 'text-rose-600') : 'text-slate-700'}">${userAns}</span>
+                        </div>
+                        <div class="p-3 bg-white border border-slate-200 rounded-xl">
+                            <span class="text-slate-400 block font-semibold mb-1">Kunci Jawaban / Acuan:</span>
+                            <span class="font-bold text-brand-600">${keyAns}</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-brand-50/60 border border-brand-100 rounded-xl text-xs text-brand-900">
+                        <span class="font-bold block mb-1 text-brand-700"><i class="fa-solid fa-lightbulb mr-1"></i>Pembahasan:</span>
+                        <p class="leading-relaxed">${q.pembahasan}</p>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function resetApp() {
+            document.getElementById('resultView').classList.add('hidden');
+            document.getElementById('loginView').classList.remove('hidden');
+            document.getElementById('loginNama').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        function copyAppsScriptCode() {
+            const code = document.getElementById('appsScriptCodeBlock').innerText;
+            const temp = document.createElement('textarea');
+            temp.value = code;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+
+            const btnText = document.getElementById('copyBtnText');
+            btnText.innerText = 'Berhasil Disalin!';
+            setTimeout(() => { btnText.innerText = 'Salin Kode'; }, 2000);
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-5 right-5 z-50 px-4 py-3 rounded-xl text-xs font-semibold text-white shadow-lg transition-all duration-300 transform translate-y-2 ${isError ? 'bg-rose-600' : 'bg-slate-800'}`;
+            toast.innerHTML = `<i class="fa-solid ${isError ? 'fa-circle-exclamation' : 'fa-circle-check'} mr-2"></i>${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
